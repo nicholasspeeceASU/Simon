@@ -4,135 +4,132 @@ import javax.swing.Timer;
 
 public class SimonController implements ActionListener {
 	// Declare Variables
-	private static Boolean isUserTurn = true;
-	public static int pressedButton;
-	public static int indexNumber;
-	private static int score = 0;
-	private static LinkedList<Integer> playerActions = new LinkedList<Integer>();
+	public int pressedButton;
+	public int indexNumber;
+	private LinkedList<Integer> playerActions;
 	static Boolean isDebug = true;
-	private static Boolean isWrong = false;
+	public Simon simonWindow;
+	public Boolean playButtonPushed;
+	public int round;
 	
+	//-------------------------------------------------------------------------
+	// Declare the main method:
+	// This method simply creates an object of type SimonController
+	//-------------------------------------------------------------------------
+	public static void main(String[] args) {
+		
+		@SuppressWarnings("unused")
+		SimonController simonController = new SimonController();
+		
+	} // End of Main method.***************************************************
+	
+	//------------------------------------------------------------------------
+	// Declare constructor method for SimonController:
+	// This method constructs a SimonController object
+	// which includes the display of the new simonWindow.
+	//------------------------------------------------------------------------
 	public SimonController(){
 		// Display the application window.
 		try {
-			Simon simonWindow = new Simon();
+			simonWindow = new Simon(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
+		// Init variables
+		pressedButton = 0;
+		indexNumber = 0;
+		playerActions = new LinkedList<Integer>();
+		playButtonPushed = false;
+		round = 0;
+		
 		// Create the Swing Timer object to fire the event monitor
 		Timer timer = new Timer(20, this);
-		
+	
+		// Start the Swing timer.
 		timer.start();
+		
 	}
-	
-	
-	//-------------------------------------------------------------------------
-	// Declare the main method.
-	public static void main(String[] args) {
 		
-		SimonController simon = new SimonController();
-		
-		
-		
-		
-		// An incorrect answer was provided. Update the high score and start over.
-		
-		//########## DEBUG BLOCK ##########
-		if (isDebug) {
-			//testGameEngine();
-		} //###############################
-	} // End of Main method.***************************************************
 	
 	//-------------------------------------------------------------------------
 	// Override the actionPerformed() method:
-	// This method will respond to triggers from a timer, to handle
-	// game events.  
+	// This method will respond to triggers from the swing timer, to handle
+	// game events and logic.  
 	//-------------------------------------------------------------------------
 	@Override
 	public void actionPerformed(ActionEvent e){
-		if (SimonController.pressedButton == SimonController.playerActions[SimonController.indexNumber]){
-			SimonController.indexNumber++;
-			SimonController.pressedButton = 0;
-		}
+		if (playButtonPushed){
+			if (round > 0){
+				if (pressedButton != 0) {
+					if (isDebug){
+						System.out.println("pressedButton is " + pressedButton);
+						System.out.println("Array size is " + playerActions.size());
+						System.out.println("Index is " + indexNumber);
+					}
+					if (indexNumber == playerActions.size()-1){
+						if (isDebug){
+							System.out.println("End of array");
+							System.out.println("Checking " + pressedButton + " " + playerActions.get(indexNumber));
+						}	
+						if (pressedButton == playerActions.get(indexNumber)){
+							if (isDebug){
+								System.out.println("Round is won!");
+								round++;
+							}
+							generateAction();
+							indexNumber = 0;
+							pressedButton = 0;
+							Thread player = new Thread(new PlayActions(playerActions, simonWindow));
+							player.start();
+							//simonWindow.setMessage("Your turn.  Good luck!");
+						} else {
+							System.out.println("Nope");
+							simonWindow.setMessage("That's not it!! Loading new game...");
+							
+							resetGame();
+
+						}
+					} else if (indexNumber < playerActions.size()-1){
+						if (pressedButton == playerActions.get(indexNumber)){
+							indexNumber++;
+							pressedButton = 0;
+						} else {
+							System.out.println("Nope");
+							simonWindow.setMessage("That's not it!! Loading new game...");
+							
+							resetGame();
+						}
+					}
+				}	
+			} else if (round == 0){
+				generateAction();
+				simonWindow.setMessage("My Turn!  Remember...");
+				Thread player = new Thread(new PlayActions(playerActions, simonWindow));
+				player.start();
+				
+				round++;
+			}
+			
 		
-		if (SimonController.indexNumber > SimonController.playerActions.size()){
-			SimonController.generateAction();
 		}
-	}
-	
-	
-	
-	
-	
-	public void setScore(int score) {
-		// ########## DEBUG BLOCK ##########
-		if (isDebug){
-			System.out.println("Setting score to " + score);
-		}// #################################
-		SimonController.score = score;
-	} // End of setScore method. **********************************************
-	
-	//-------------------------------------------------------------------------
-	// Declare the setNewScore() method:
-	// This method will set the score of the game by adding the
-	// new score to the existing score.  Each player action
-	// will call this method.
-	//-------------------------------------------------------------------------
-	public void setNewScore(int points){
-		// ########## DEBUG BLOCK ##########
-		if (isDebug){
-			System.out.println("Setting score to " + (SimonController.score + points));
-		}// ################################
-		
-		SimonController.score = SimonController.score + points;
-	} // End of setNewScore method. *******************************************
+	} // End of actionPerformed method ########################################
 	
 	//-------------------------------------------------------------------------
 	// Declare the generateAction() method:
 	// This method will generate a random number between 1-4 to be added
 	// to the linked list as a user action.  This method is called at the 
-	// successful completion of user input, which denotes "next level".
+	// successful completion of user inputs, which denotes "next level".
 	//-------------------------------------------------------------------------
-	public static void generateAction() {
+	public void generateAction() {
 		// Generate and add an action to the LinkedList object
 		Random number = new Random();
-		int newNumber = number.nextInt(4) + 1;
-		// ############## DEBUG BLOCK ##########
+		int newNumber = number.nextInt(40) % 4 + 1;
 		if (isDebug){
-			System.out.println("The random action is " + newNumber);
-		} // ###################################
-		
-		playerActions.add(newNumber);
-	} // End of generateAction method. ****************************************
-	
-	public static void playbackActions() {
-		Iterator<Integer> iterator = playerActions.descendingIterator();
-		while (iterator.hasNext()) {
-			int tempNumber = iterator.next();
-			try {
-				if (tempNumber == 1) {
-					Simon.activate(Simon.topLeft);
-					Thread.sleep(1000);
-				}
-				if (tempNumber == 2) {
-					Simon.activate(Simon.bottomLeft);
-					Thread.sleep(1000);
-				}
-				if (tempNumber == 3) {
-					Simon.activate(Simon.topRight);
-					Thread.sleep(1000);
-				}
-				if (tempNumber == 4) {
-					Simon.activate(Simon.bottomRight);
-					Thread.sleep(1000);
-				}
-			}
-			catch (InterruptedException ex){
-				System.out.println("You bothered me");
-			}
+			System.out.println("Added " + newNumber);
 		}
-	}
+		playerActions.add(newNumber);
+	} // End of generateAction method. ########################################
 	
 	//-------------------------------------------------------------------------
 	// Declare the resetGame() method:
@@ -141,10 +138,17 @@ public class SimonController implements ActionListener {
 	// recreate it to begin a new game.
 	//-------------------------------------------------------------------------
 	public void resetGame() {
-		// reset the variables of the game and reset to the beginning
-		this.setScore(0);
-		SimonController.playerActions.clear();
-		
+		this.playerActions.clear();
+		indexNumber = 0;
+		pressedButton = 0;
+		round = 0;
+		simonWindow.setMessage("Loading new game...");
+		try{
+			Thread.sleep(2000);
+		}
+		catch (InterruptedException e){
+			
+		}
 	} // End of resetGame method.**********************************************
 	
 	//-------------------------------------------------------------------------
@@ -153,12 +157,16 @@ public class SimonController implements ActionListener {
 	// has failed to enter the appropriate sequence.  This method
 	// calls the high score method, and then game reset method.
 	//-------------------------------------------------------------------------
-	public static int endGame(int actions) {
-		// Get a count of how many actions the player completed
-		// then return the score to be recorded by the interface
-		// then reset the game.
-		int endScore = 0; // TO BE REPLACED!!!!!!
-		return endScore;
+	public void endGame(int actions) {
+		simonWindow.setMessage("You made it " + round + " rounds!");
+		try{
+			Thread.sleep(2000);
+		}
+		catch (InterruptedException e){
+			
+		}
+		resetGame();
+		
 	} // End of endGame method.************************************************
 	
 	//-------------------------------------------------------------------------
@@ -166,19 +174,13 @@ public class SimonController implements ActionListener {
 	// This method is called by the interface when one of the four colored
 	// buttons is clicked by the user.
 	//-------------------------------------------------------------------------
-	public static void buttonClicked(int buttonNumber) {
-		SimonController.pressedButton = buttonNumber;
+	public void buttonClicked(int buttonNumber) {
+		if (isDebug){
+			System.out.println("The user pressed:" + buttonNumber);
+		}	
+		
+		pressedButton = buttonNumber;
 		//He is going to check if the button passed, equals the item at the index in the list.
 	} // End of buttonClicked method ############################################
 	
-	public static void testGameEngine() {
-		generateAction();
-		generateAction();
-		generateAction();
-		generateAction();
-		generateAction();
-		generateAction();
-		
-	}
-
 } // End of Simon class.
