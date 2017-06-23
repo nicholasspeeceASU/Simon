@@ -1,95 +1,92 @@
 
-/**
- * Description:
- *
- * Completion time:
- *
- * @author Jonathan George
- *
- * @version 1.0
- */
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import java.awt.BorderLayout;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.sound.sampled.Clip;
 import java.awt.Color;
-import javax.sound.sampled.DataLine.Info;
 import java.awt.Dimension;
-import java.io.File;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.Timer;
+
+/**
+ * Description: This class contains the GUI components for the Simon game.
+ *
+ * @author Jonathan George
+ *
+ * @version 1.0
+ */
 
 public class Simon {
-	
-	
-    static JLabel msgLabel;
-    JLabel topScoreLabel;
-    static JLabel scoreLabel;
-    JButton playButton;
-    JButton pauseButton;
-    JButton soundButton;
-    JButton noSoundButton;
-    JButton helpButton;
-    static JButton topLeft;
-    static JButton topRight;
-    static JButton bottomLeft;
-    static JButton bottomRight;
+
+    ImageIcon help;
     ImageIcon play;
-    ImageIcon pause;
+    ImageIcon stop;
     ImageIcon sound;
     ImageIcon noSound;
-    ImageIcon help;
     JPanel controlPanel;
-    AudioInputStream audioStream1;
-    AudioInputStream audioStream2;
-    AudioInputStream audioStream3;
-    AudioInputStream audioStream4;
-    AudioInputStream awwAudioStream;
-    Clip topLeftClip;
-    Clip topRightClip;
-    Clip bottomLeftClip;
-    Clip BottomRightClip;
-    boolean soundOn;
+    JLabel msgLabel;
+    JLabel scoreLabel;
+    JFrame mainFrame;
+    JButton helpButton;
+    JButton playButton;
+    JButton stopButton;
+    JButton soundButton;
+    JButton noSoundButton;
+    SimonController controller;
+    static SquareButton topLeft;
+    static SquareButton topRight;
+    static SquareButton bottomLeft;
+    static SquareButton bottomRight;
+    String soundFile1;
+    String soundFile2;
+    String soundFile3;
+    String soundFile4;
+    boolean soundOn = true;
+
+    public Simon(SimonController cont) {
+        this.controller = cont;
+        initComponents();
+        addActionListeners();
+        setMessage("Welcome to Simon. Press play to start.");
+    }
 
     private void initComponents() {
 
-        //Create header
-        topScoreLabel = new JLabel("TOP SCORE:");
-        topScoreLabel.setHorizontalAlignment(JLabel.LEFT);
-        topScoreLabel.setForeground(Color.WHITE);
-        topScoreLabel.setFont(new Font("Lato", Font.BOLD, 24));
+        // Create header
+        ImageIcon title = new ImageIcon(this.getClass().getResource(
+                "/Buttons/Simon.png"));
+        Image titleImageTemp = title.getImage();
+        Image titleImage = titleImageTemp.getScaledInstance(
+                125, 56, Image.SCALE_SMOOTH);
+        title = new ImageIcon(titleImage);
 
-        scoreLabel = new JLabel("SCORE: ");
+        JButton titleButton = new JButton(title);
+        titleButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        titleButton.setOpaque(false);
+        titleButton.setContentAreaFilled(false);
+        titleButton.setBorderPainted(false);
+        titleButton.setFocusPainted(false);
+
+        scoreLabel = new JLabel("Round " + controller.getRound());
         scoreLabel.setHorizontalAlignment(JLabel.RIGHT);
         scoreLabel.setForeground(Color.WHITE);
-        scoreLabel.setFont(new Font("Lato", Font.BOLD, 24));
+        scoreLabel.setFont(new Font("Lato", Font.PLAIN, 18));
 
         JPanel headerRow = new JPanel();
-        topScoreLabel.setForeground(Color.WHITE);
         headerRow.setBackground(new Color(39, 35, 35));
         headerRow.setLayout(new BoxLayout(headerRow, BoxLayout.X_AXIS));
         headerRow.add(Box.createHorizontalGlue());
-        headerRow.add(topScoreLabel);
-        headerRow.add(Box.createRigidArea(new Dimension(140, 50)));
+        headerRow.add(titleButton);
+        headerRow.add(Box.createRigidArea(new Dimension(278, 50)));
         headerRow.add(scoreLabel);
         headerRow.add(Box.createHorizontalGlue());
 
@@ -110,31 +107,31 @@ public class Simon {
         buttonPanel.add(bottomRight);
 
         //Create ImageIcons and resize for control panel buttons
-        play = new ImageIcon(".//src//Buttons//Play.png");
+        play = new ImageIcon(this.getClass().getResource("/Buttons/Play.png"));
         Image playImageTemp = play.getImage();
         Image playImage = playImageTemp.
                 getScaledInstance(45, 45, Image.SCALE_SMOOTH);
         play = new ImageIcon(playImage);
 
-        pause = new ImageIcon(".//src//Buttons//Pause.png");
-        Image pauseImageTemp = pause.getImage();
+        stop = new ImageIcon(this.getClass().getResource("/Buttons/Stop.png"));
+        Image pauseImageTemp = stop.getImage();
         Image pauseImage = pauseImageTemp.
                 getScaledInstance(45, 45, Image.SCALE_SMOOTH);
-        pause = new ImageIcon(pauseImage);
+        stop = new ImageIcon(pauseImage);
 
-        sound = new ImageIcon(".//src//Buttons//Sound.png");
+        sound = new ImageIcon(this.getClass().getResource("/Buttons/Sound.png"));
         Image soundImageTemp = sound.getImage();
         Image soundImage = soundImageTemp.
                 getScaledInstance(45, 45, Image.SCALE_SMOOTH);
         sound = new ImageIcon(soundImage);
 
-        noSound = new ImageIcon(".//src//Buttons//No_Sound.png");
+        noSound = new ImageIcon(this.getClass().getResource("/Buttons/No_Sound.png"));
         Image noSoundImageTemp = noSound.getImage();
         Image noSoundImage = noSoundImageTemp.
                 getScaledInstance(45, 45, Image.SCALE_SMOOTH);
         noSound = new ImageIcon(noSoundImage);
 
-        help = new ImageIcon(".//src//Buttons//Help.png");
+        help = new ImageIcon(this.getClass().getResource("/Buttons/Help.png"));
         Image helpImageTemp = help.getImage();
         Image helpImage = helpImageTemp.
                 getScaledInstance(45, 45, Image.SCALE_SMOOTH);
@@ -160,13 +157,13 @@ public class Simon {
         playButton.setBorderPainted(false);
         playButton.setFocusPainted(false);
 
-        pauseButton = new JButton(pause);
-        pauseButton.setPreferredSize(new Dimension(125, 75));
-        pauseButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        pauseButton.setOpaque(false);
-        pauseButton.setContentAreaFilled(false);
-        pauseButton.setBorderPainted(false);
-        pauseButton.setFocusPainted(false);
+        stopButton = new JButton(stop);
+        stopButton.setPreferredSize(new Dimension(125, 75));
+        stopButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        stopButton.setOpaque(false);
+        stopButton.setContentAreaFilled(false);
+        stopButton.setBorderPainted(false);
+        stopButton.setFocusPainted(false);
 
         soundButton = new JButton(sound);
         soundButton.setPreferredSize(new Dimension(125, 75));
@@ -201,7 +198,7 @@ public class Simon {
         controlPanel.add(Box.createRigidArea(new Dimension(10, 10)));
         controlPanel.add(playButton);
         controlPanel.add(Box.createRigidArea(new Dimension(10, 10)));
-        controlPanel.add(pauseButton);
+        controlPanel.add(stopButton);
         controlPanel.add(Box.createRigidArea(new Dimension(10, 10)));
         controlPanel.add(soundButton);
         controlPanel.add(Box.createRigidArea(new Dimension(10, 10)));
@@ -214,13 +211,15 @@ public class Simon {
         bottomRow.add(msgPanel);
         bottomRow.add(controlPanel);
 
+        // Create game panel
         JPanel gamePanel = new JPanel();
         gamePanel.setLayout(new BorderLayout());
         gamePanel.add(buttonPanel, BorderLayout.CENTER);
         gamePanel.add(headerRow, BorderLayout.NORTH);
         gamePanel.add(bottomRow, BorderLayout.SOUTH);
 
-        JFrame mainFrame = new JFrame("Simon");
+        // Create frame
+        mainFrame = new JFrame("Simon");
         mainFrame.setSize(550, 550);
         mainFrame.setBackground(new Color(39, 35, 35));
         mainFrame.add(gamePanel);
@@ -230,79 +229,40 @@ public class Simon {
         mainFrame.setVisible(true);
     }
 
-    private void enableSound() {
-        File soundFile1 = new File(".//src//Sounds//a_sharp.wav");
-        File soundFile2 = new File(".//src//Sounds//c_sharp.wav");
-        File soundFile3 = new File(".//src//Sounds//d_sharp.wav");
-        File soundFile4 = new File(".//src//Sounds//g_sharp.wav");
-        File awwSoundFile = new File(".//src//Sounds//aww.wav");
-
-        try {
-            audioStream1 = AudioSystem.getAudioInputStream(
-                    soundFile1);
-            audioStream2 = AudioSystem.getAudioInputStream(
-                    soundFile2);
-            audioStream3 = AudioSystem.getAudioInputStream(
-                    soundFile3);
-            audioStream4 = AudioSystem.getAudioInputStream(
-                    soundFile4);
-            awwAudioStream = AudioSystem.getAudioInputStream(
-                    awwSoundFile);
-
-            AudioFormat format1 = audioStream1.getFormat();
-            AudioFormat format2 = audioStream2.getFormat();
-            AudioFormat format3 = audioStream3.getFormat();
-            AudioFormat format4 = audioStream4.getFormat();
-            AudioFormat awwFormat = awwAudioStream.getFormat();
-
-            DataLine.Info info1 = new DataLine.Info(Clip.class, format1);
-            DataLine.Info info2 = new DataLine.Info(Clip.class, format2);
-            DataLine.Info info3 = new DataLine.Info(Clip.class, format3);
-            DataLine.Info info4 = new DataLine.Info(Clip.class, format4);
-            DataLine.Info awwInfo = new DataLine.Info(Clip.class, awwFormat);
-
-            try {
-                topLeftClip = (Clip) AudioSystem.getLine(info1);
-                topRightClip = (Clip) AudioSystem.getLine(info2);
-                bottomLeftClip = (Clip) AudioSystem.getLine(info3);
-                BottomRightClip = (Clip) AudioSystem.getLine(info4);
-                bottomLeftClip = (Clip) AudioSystem.getLine(awwInfo);
-            }
-            catch (LineUnavailableException ex) {
-                Logger.getLogger(Simon.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        }
-        catch (UnsupportedAudioFileException ex) {
-            System.out.println("Audio file not supported");
-        }
-        catch (IOException ex) {
-            System.out.println("Audio file not found.");
-        }
-
-    }
-
+    /**
+     * Adds action listeners to all buttons
+     */
     private void addActionListeners() {
 
-        //Control Button ActionListeners
+        //Control panel JButton ActionListeners
         playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setMessage("Play Button Clicked");
+                Simon.topLeft.setEnabled(false);
+                Simon.topRight.setEnabled(false);
+                Simon.bottomLeft.setEnabled(false);
+                Simon.bottomRight.setEnabled(false);
+                controller.playButtonPushed = true;
+                controller.stopButtonPushed = false;
+                controller.round = 0;
+                playButton.setEnabled(false);
+                playButton.setDisabledIcon(play);
             }
         });
 
-        pauseButton.addActionListener(new ActionListener() {
+        stopButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setMessage("Pause Button Clicked");
+                controller.playButtonPushed = false;
+                controller.stopButtonPushed = true;
+                controller.stopGame();
             }
         });
 
         soundButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setMessage("Sound Button Clicked");
+                setMessage("Sound is off");
                 soundButton.add(noSoundButton);
                 soundOn = false;
             }
@@ -311,7 +271,7 @@ public class Simon {
         noSoundButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setMessage("No Sound Button Clicked");
+                setMessage("Sound is on");
                 soundButton.remove(noSoundButton);
                 soundOn = true;
             }
@@ -320,72 +280,98 @@ public class Simon {
         helpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setMessage("Help Button Clicked");
+                new SimonHelp();
             }
         });
 
-//////////////////////////////////////////////////////////////////////////
-        //Game Button ActionListeners
+        //Game JButton ActionListeners
         topLeft.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SimonController.buttonClicked(1);
+                controller.buttonClicked(1);
+                activate(topLeft);
             }
         });
-
 
         topRight.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SimonController.buttonClicked(2);
+                controller.buttonClicked(2);
+                activate(topRight);
             }
         });
 
         bottomLeft.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SimonController.buttonClicked(3);
+                controller.buttonClicked(3);
+                activate(bottomLeft);
             }
         });
 
         bottomRight.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SimonController.buttonClicked(4);
+                controller.buttonClicked(4);
+                activate(bottomRight);
             }
         });
     }
 
-    public static void activate(JButton pButton) {
-        pButton.doClick();
-    }
-    
-    public static void openingSequence() {
-    	activate(topLeft);
-    	activate(bottomLeft);
-    	activate(topRight);
-    	activate(bottomRight);
-    	
+    /**
+     * This method will cause the clicked button to flash and play a sound.
+     *
+     * @param pButton SquareButton that will flash when activated
+     * @return int value of game button for game controller
+     *
+     */
+    public int activate(SquareButton pButton) {
+
+        soundFile1 = new String("/Sounds/a_sharp.wav");
+        soundFile2 = new String("/Sounds/c_sharp.wav");
+        soundFile3 = new String("/Sounds/d_sharp.wav");
+        soundFile4 = new String("/Sounds/g_sharp.wav");
+
+        Color temp = pButton.getColor();
+        pButton.setBackground(Color.WHITE);
+        Timer flashTimer = new Timer(200, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ex) {
+                pButton.setBackground(temp);
+            }
+        });
+        flashTimer.setRepeats(false);
+        flashTimer.start();
+
+        if (soundOn) {
+            switch (pButton.getValue()) {
+                case 1:
+                    Thread sound1 = new Thread(new Sound(soundFile1));
+                    sound1.start();
+                    break;
+                case 2:
+                    Thread sound2 = new Thread(new Sound(soundFile2));
+                    sound2.start();
+                    break;
+                case 3:
+                    Thread sound3 = new Thread(new Sound(soundFile3));
+                    sound3.start();
+                    break;
+                case 4:
+                    Thread sound4 = new Thread(new Sound(soundFile4));
+                    sound4.start();
+                    break;
+                default:
+            }
+        }
+        return pButton.getValue();
     }
 
-    public static void setMessage(String pMsg) {
+    public void updateRound(int pRound) {
+        scoreLabel.setText("Round " + pRound);
+    }
+
+    public void setMessage(String pMsg) {
         msgLabel.setText(pMsg);
     }
-
-    public String getMessage() {
-        return msgLabel.getText();
-    }
-
-    public static void setScore(String pScore) {
-        Simon.scoreLabel.setText(pScore);
-    }
-
-    public Simon() {
-        initComponents();
-        addActionListeners();
-        setMessage("Welcome to Simon. Press play to start.");
-        enableSound();
-    }
-    
-    
 }
